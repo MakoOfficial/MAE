@@ -269,11 +269,6 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
     # 每过10轮，学习率降低一半
     scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
 
-    MAE_optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
-    # 每过10轮，学习率降低一半
-    MAE_scheduler = StepLR(MAE_optimizer, step_size=lr_period, gamma=lr_decay)
-
-
     seed=101
     torch.manual_seed(seed)  
 
@@ -302,7 +297,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
 
             batch_size = len(data[1])
             label = data[1].to(devices)
-            MAE_optimizer.zero_grad()
+            optimizer.zero_grad()
 
             _, pred_pic, mask, _ = net(image, gender, 0.75)
             target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
@@ -314,7 +309,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             # backward,update parameter，更新参数
             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
             # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
-            MAE_optimizer.step()
+            optimizer.step()
             # print("=============更新之后===========")
             # for name, parms in net.named_parameters():	
             #     print('-->name:', name)
@@ -336,11 +331,15 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         MAE_record.append([epoch, round(MAE_train_loss.item(), 2), round(MAE_val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
         print(
             f'training loss is {round(MAE_train_loss.item(), 2)}, val loss is {round(MAE_val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
-        MAE_scheduler.step()
+        scheduler.step()
         with open(MAE_record_path, 'a+', newline='') as csvfile1:
             writer1 = csv.writer(csvfile1)
             for row in MAE_record:
                 writer1.writerow(row)
+    
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    # 每过10轮，学习率降低一半
+    scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
     
     # regression train
     """======================================================================"""
