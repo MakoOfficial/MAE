@@ -236,12 +236,10 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         writer1 = csv.writer(csvfile1)
         for row in MAE_record:
             writer1.writerow(row)
-    devices = d2l.try_all_gpus()
+    devices = torch.device('cuda')
     # 增加多卡训练
-    net = nn.DataParallel(net, device_ids=devices)
-
     ## Network, optimizer, and loss function creation
-    net = net.to(devices[0])
+    net = net.to(devices)
     
     # 数据读取
     # Creates dataloaders, which load data in batches
@@ -294,10 +292,10 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         for batch_idx, data in enumerate(train_loader):
             # #put data to GPU
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices[0]), gender.type(torch.FloatTensor).to(devices[0])
+            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
 
             batch_size = len(data[1])
-            label = data[1].to(devices[0])
+            label = data[1].to(devices)
             optimizer.zero_grad()
 
             loss, pred_pic, mask, _ = net(image, gender, 0.75)
@@ -356,10 +354,10 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         for batch_idx, data in enumerate(train_loader):
             # #put data to GPU
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices[0]), gender.type(torch.FloatTensor).to(devices[0])
+            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
 
             batch_size = len(data[1])
-            label = data[1].to(devices[0])
+            label = data[1].to(devices)
             _, _, _, y_pred = net(image, gender, 0.75)
             # y_pred = y_pred.squeeze()
 
@@ -417,9 +415,9 @@ def valid_fn(*, net, val_loader, devices):
             val_total_size += len(data[1])
 
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices[0]), gender.type(torch.FloatTensor).to(devices[0])
+            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
 
-            label = data[1].type(torch.FloatTensor).to(devices[0])
+            label = data[1].type(torch.FloatTensor).to(devices)
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
             _, _, _, y_pred = net(image, gender, 0.75)
@@ -446,7 +444,7 @@ def MAE_valid_fn(*, net, val_loader, devices):
             MAE_val_total_size += len(data[1])
 
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices[0]), gender.type(torch.FloatTensor).to(devices[0])
+            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
             loss, _, _, _ = net(image, gender, 0.75)
