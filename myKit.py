@@ -292,7 +292,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         for batch_idx, data in enumerate(train_loader):
             # #put data to GPU
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
+            image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
             batch_size = len(data[1])
             label = data[1].to(devices)
@@ -354,7 +354,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         for batch_idx, data in enumerate(train_loader):
             # #put data to GPU
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
+            image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
             batch_size = len(data[1])
             label = data[1].to(devices)
@@ -415,7 +415,7 @@ def valid_fn(*, net, val_loader, devices):
             val_total_size += len(data[1])
 
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
+            image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
             label = data[1].type(torch.FloatTensor).to(devices)
 
@@ -444,7 +444,7 @@ def MAE_valid_fn(*, net, val_loader, devices):
             MAE_val_total_size += len(data[1])
 
             image, gender = data[0]
-            image, gender = image.type(torch.FloatTensor).to(devices), gender.type(torch.FloatTensor).to(devices)
+            image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
             loss, _, _, _ = net(image, gender, 0.75)
