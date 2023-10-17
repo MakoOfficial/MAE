@@ -22,6 +22,7 @@ import time
 from sklearn.model_selection import train_test_split
 import random
 from MAE import MAE, Ensemble
+from einops import rearrange
 
 """本文档主要是解决训练过程中的一些所用到的函数的集合
 函数列表：
@@ -259,7 +260,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         shuffle=False)
 
 
-    # loss_fn =  nn.MSELoss(reduction = 'sum')
+    MSE_fn =  nn.MSELoss()
     # loss_fn = nn.L1Loss(reduction='sum')
     loss_fn = nn.BCELoss(reduction="sum")
     lr = lr
@@ -303,8 +304,13 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             label = data[1].to(devices)
             MAE_optimizer.zero_grad()
 
-            loss, pred_pic, mask, _ = net(image, gender, 0.75)
-
+            _, pred_pic, mask, _ = net(image, gender, 0.75)
+            target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
+            mean = target.mean(dim=-1, keepdim=True)
+            var = target.var(dim=-1, keepdim=True)
+            target = (target - mean) / (var + 1.e-6)**.5
+            loss = MSE_fn(pred_pic, target)
+            loss = ((loss * mask).sum() / mask.sum())
             loss.backward()
             # backward,update parameter，更新参数
             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
@@ -314,6 +320,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             for name, parms in net.named_parameters():	
                 print('-->name:', name)
                 print('-->grad_requirs:',parms.requires_grad)
+                print('-->grad_value:',parms.grad)
                 print("======================================")
             batch_loss = loss.item()
 
@@ -360,11 +367,11 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
 
             batch_size = len(data[1])
             label = data[1].to(devices)
-            _, _, _, y_pred = net(image, gender, 0.75)
-            # y_pred = y_pred.squeeze()
 
             # zero the parameter gradients，是参数梯度归0
             optimizer.zero_grad()
+            _, _, _, y_pred = net(image, gender, 0.75)
+            # y_pred = y_pred.squeeze()
 
             # print(y_pred, label)，求损失
             loss = loss_fn(y_pred, label)
@@ -382,6 +389,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             for name, parms in net.named_parameters():	
                 print('-->name:', name)
                 print('-->grad_requirs:',parms.requires_grad)
+                print('-->grad_value:',parms.grad)
                 print("======================================")
             batch_loss = loss.item()
 

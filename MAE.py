@@ -108,7 +108,7 @@ class MAE(nn.Module):
         self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_embed_dim))
         torch.nn.init.normal_(self.mask_token, std=.02)
 
-        self.decoder_pos_embed = nn.Parameter(torch.zeros(1, self.num_patches, decoder_embed_dim), requires_grad=False)  # fixed sin-cos embedding
+        self.decoder_pos_embed = nn.Parameter(torch.zeros(1, self.num_patches, decoder_embed_dim), requires_grad=True)  # fixed sin-cos embedding
 
         self.decoder_pred = nn.Linear(decoder_embed_dim, patch_size**2, bias=True) # decoder to patch
         
