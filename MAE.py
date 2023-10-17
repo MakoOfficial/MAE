@@ -235,7 +235,7 @@ class Ensemble(nn.Module):
         gender_encode = self.gender_encoder(gender)
 
         x = torch.cat([x, gender_encode], dim=1)
-        print(x.shape)
+        # print(x.shape)
         return loss, pred_pic, mask, self.MLP(x)
     
     def fine_tune(self, isClass=False):
@@ -263,4 +263,3 @@ if __name__ == '__main__':
     net = net.cuda()
     # net(image, gender, mask_ratio)
     net.fine_tune(True)
-    
