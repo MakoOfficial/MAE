@@ -309,7 +309,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
-            loss = MSE_fn(pred_pic, target)
+            loss = torch.sum(MSE_fn(pred_pic, target), dim=-1)
             loss = ((loss * mask).sum(dim=-1) / mask.sum(-1)).sum()
             loss.backward()
             # backward,update parameter，更新参数
