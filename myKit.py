@@ -301,7 +301,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             loss, pred_pic, mask, _ = net(image, gender, 0.75)
 
             # print(y_pred, label)，求损失
-            loss = loss_fn(y_pred, label)
+            # loss = loss_fn(y_pred, label)
             # loss = criterion(y_pred, label.long()).sum()
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数

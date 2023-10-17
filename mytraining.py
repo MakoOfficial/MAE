@@ -18,9 +18,11 @@ if __name__ == '__main__':
     # 6.17 直接使用ResNet50来训练
     # net = resnet50(pretrained=True)
     lr = 5e-4
-    batch_size = 32
-    num_epochs = 50
-    MAE_epochs = 50
+    batch_size = 16
+    # num_epochs = 50
+    num_epochs = 5
+    # MAE_epochs = 50
+    MAE_epochs = 5
     weight_decay = 0.0001
     lr_period = 10
     lr_decay = 0.5
