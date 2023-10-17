@@ -23,7 +23,7 @@ class Attention_Layer(nn.Module):
 
         self.to_out = nn.Sequential(
             nn.Linear(inner_dim, embedding_dim),
-            nn.LeakyReLU()
+            nn.Dropout(0.1)
         )
 
     def forward(self, input):
@@ -46,9 +46,10 @@ class Trans_MLP(nn.Module):
         self.Norm_Layer = nn.LayerNorm(embedding_dim)
         self.MLP = nn.Sequential(
             nn.Linear(embedding_dim, hidden_dim),
-            nn.ReLU(),
+            nn.GELU(),
+            nn.Dropout(0.1),
             nn.Linear(hidden_dim, embedding_dim),
-            nn.ReLU()
+            nn.Dropout(0.1)
         )
     
     def forward(self, input):
@@ -101,7 +102,7 @@ class MAE(nn.Module):
 
         self.decoder_embed = nn.Sequential(
                 nn.Linear(embedding_dim, decoder_embed_dim, bias=True),
-                nn.ReLU()
+                nn.Dropout(0.1)
         )
 
         self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_embed_dim))
@@ -206,7 +207,7 @@ class Ensemble(nn.Module):
         self.gender_encoder = nn.Sequential(
             nn.Linear(1, gender_dim),
             nn.BatchNorm1d(gender_dim),
-            nn.ReLU()
+            nn.Dropout(0.1)
         )
 
         self.conv2 = nn.Sequential(
@@ -238,7 +239,7 @@ class Ensemble(nn.Module):
         # print(x.shape)
         return loss, pred_pic, mask, self.MLP(x)
     
-    def fine_tune(self, isClass=False):
+    def fine_tune(self, isClass):
         notClass = not isClass
         for param in self.backbone.parameters():
             param.requires_grad = notClass

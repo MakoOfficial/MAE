@@ -268,6 +268,11 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
     # 每过10轮，学习率降低一半
     scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
 
+    MAE_optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    # 每过10轮，学习率降低一半
+    MAE_scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
+
+
     seed=101
     torch.manual_seed(seed)  
 
@@ -296,28 +301,25 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
 
             batch_size = len(data[1])
             label = data[1].to(devices)
-            optimizer.zero_grad()
+            MAE_optimizer.zero_grad()
 
             loss, pred_pic, mask, _ = net(image, gender, 0.75)
 
-            # print(y_pred, label)，求损失
-            # loss = loss_fn(y_pred, label)
-            # loss = criterion(y_pred, label.long()).sum()
-            # backward,calculate gradients，反馈计算梯度
-            # 弃用罚函数
-#             total_loss = loss + L1_penalty(net, 1e-5)
-#             total_loss.backward() 
             loss.backward()
             # backward,update parameter，更新参数
             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
             # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
-            optimizer.step()
-
+            MAE_optimizer.step()
+            print("=============更新之后===========")
+            for name, parms in net.named_parameters():	
+                print('-->name:', name)
+                print('-->grad_requirs:',parms.requires_grad)
+                print("======================================")
             batch_loss = loss.item()
 
             MAE_training_loss += batch_loss
             MAE_total_size += batch_size
-            print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
+            # print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
 
         ## Evaluation
         # Sets net to eval and no grad context
@@ -326,9 +328,9 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         
         MAE_train_loss, MAE_val_mae = MAE_training_loss / MAE_total_size, MAE_mae_loss / MAE_val_total_size
         MAE_record.append([epoch, round(MAE_train_loss.item(), 2), round(MAE_val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
-        # print(
-        #     f'training loss is {round(MAE_train_loss.item(), 2)}, val loss is {round(MAE_val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
-        scheduler.step()
+        print(
+            f'training loss is {round(MAE_train_loss.item(), 2)}, val loss is {round(MAE_val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
+        MAE_scheduler.step()
         with open(MAE_record_path, 'a+', newline='') as csvfile1:
             writer1 = csv.writer(csvfile1)
             for row in MAE_record:
@@ -376,12 +378,16 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
             # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
             optimizer.step()
-
+            print("=============更新之后===========")
+            for name, parms in net.named_parameters():	
+                print('-->name:', name)
+                print('-->grad_requirs:',parms.requires_grad)
+                print("======================================")
             batch_loss = loss.item()
 
             training_loss += batch_loss
             total_size += batch_size
-            print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
+            # print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
 
         ## Evaluation
         # Sets net to eval and no grad context
@@ -390,8 +396,8 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         
         train_loss, val_mae = training_loss / total_size, mae_loss / val_total_size
         this_record.append([epoch, round(train_loss.item(), 2), round(val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
-        # print(
-            # f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
+        print(
+            f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
         scheduler.step()
         with open(record_path, 'a+', newline='') as csvfile:
             writer = csv.writer(csvfile)
