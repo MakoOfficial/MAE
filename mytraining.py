@@ -17,12 +17,12 @@ if __name__ == '__main__':
     net = myKit.get_net(512, 32, depth=6, hidden_dim=256, embedding_dim=1024, decoder_embed_dim=512, gender_size=32)
     # 6.17 直接使用ResNet50来训练
     # net = resnet50(pretrained=True)
-    lr = 5e-4
-    batch_size = 16
+    lr = 5e-3
+    batch_size = 32
     # num_epochs = 50
-    num_epochs = 5
+    num_epochs = 10
     # MAE_epochs = 50
-    MAE_epochs = 5
+    MAE_epochs = 10
     weight_decay = 0.0001
     lr_period = 10
     lr_decay = 0.5

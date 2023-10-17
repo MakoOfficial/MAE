@@ -326,8 +326,8 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         
         MAE_train_loss, MAE_val_mae = MAE_training_loss / MAE_total_size, MAE_mae_loss / MAE_val_total_size
         MAE_record.append([epoch, round(MAE_train_loss.item(), 2), round(MAE_val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
-        print(
-            f'training loss is {round(MAE_train_loss.item(), 2)}, val loss is {round(MAE_val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
+        # print(
+        #     f'training loss is {round(MAE_train_loss.item(), 2)}, val loss is {round(MAE_val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
         scheduler.step()
         with open(MAE_record_path, 'a+', newline='') as csvfile1:
             writer1 = csv.writer(csvfile1)
@@ -390,8 +390,8 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         
         train_loss, val_mae = training_loss / total_size, mae_loss / val_total_size
         this_record.append([epoch, round(train_loss.item(), 2), round(val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
-        print(
-            f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
+        # print(
+            # f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
         scheduler.step()
         with open(record_path, 'a+', newline='') as csvfile:
             writer = csv.writer(csvfile)
