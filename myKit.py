@@ -260,7 +260,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
         shuffle=False)
 
 
-    MSE_fn =  nn.MSELoss(reduction="none")
+    MSE_fn =  nn.MSELoss(reduction="sum")
     # loss_fn = nn.L1Loss(reduction='sum')
     loss_fn = nn.BCELoss(reduction="sum")
     lr = lr
@@ -309,8 +309,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
-            loss = torch.sum(MSE_fn(pred_pic, target), dim=-1)
-            loss = torch.sum((torch.sum(loss * mask, dim=-1) / torch.sum(mask, dim=-1)), dim=-1)
+            loss = MSE_fn(pred_pic, target)
             loss.backward()
             # backward,update parameter，更新参数
             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
