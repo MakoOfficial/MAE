@@ -20,9 +20,9 @@ if __name__ == '__main__':
     lr = 5e-3
     batch_size = 32
     # num_epochs = 50
-    num_epochs = 30
+    num_epochs = 60
     # MAE_epochs = 50
-    MAE_epochs = 30
+    MAE_epochs = 60
     weight_decay = 0.0001
     lr_period = 10
     lr_decay = 0.5
