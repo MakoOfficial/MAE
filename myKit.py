@@ -277,7 +277,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
     
     for epoch in range(MAE_epochs):
         net.train()
-        net.fine_tune(False)
+        # net.fine_tune(False)
         print(f"MAE TRAINING!!\nEpoch:{epoch+1}")
         MAE_record = []
         global MAE_training_loss
