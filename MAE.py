@@ -194,9 +194,10 @@ class MAE(nn.Module):
 
         pred_pic = self.decoder(x, ids_restore)
 
-        loss = self.forward_loss(image, pred_pic, mask)
+        # loss = self.forward_loss(image, pred_pic, mask)
 
-        return loss, pred_pic, mask, class_feature
+        # return loss, pred_pic, mask, class_feature
+        return pred_pic, mask, class_feature
     
 class Ensemble(nn.Module):
     def __init__(self, backbone, out_channels, gender_dim) -> None:

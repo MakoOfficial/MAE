@@ -300,7 +300,8 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             label = data[1].to(devices)
             optimizer.zero_grad()
 
-            _, pred_pic, mask, _ = net(image, gender, 0.75)
+            # _, pred_pic, mask, _ = net(image, gender, 0.75)
+            pred_pic, mask, _ = net(image, 0.75)
             target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
             # mean = target.mean(dim=-1, keepdim=True)
             # var = target.var(dim=-1, keepdim=True)
@@ -462,7 +463,8 @@ def MAE_valid_fn(*, net, val_loader, devices):
             image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
-            _, pred_pic, mask, _ = net(image, gender, 0.75)
+            # _, pred_pic, mask, _ = net(image, gender, 0.75)
+            pred_pic, mask, _ = net(image, 0.75)
             target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
             # mean = target.mean(dim=-1, keepdim=True)
             # var = target.var(dim=-1, keepdim=True)
