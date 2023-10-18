@@ -43,8 +43,9 @@ def seed_everything(seed=1234):
 
 def get_net(image_size, patch_size, depth=6, hidden_dim=256, embedding_dim=1024, decoder_embed_dim=512, gender_size=32):
     """获取神经网络"""
-    mae = MAE(image_size, patch_size, depth=depth, hidden_dim=hidden_dim, embedding_dim=embedding_dim, decoder_embed_dim=decoder_embed_dim)
-    return Ensemble(mae, embedding_dim, gender_size)
+    # mae = MAE(image_size, patch_size, depth=depth, hidden_dim=hidden_dim, embedding_dim=embedding_dim, decoder_embed_dim=decoder_embed_dim)
+    return MAE(image_size, patch_size, depth=depth, hidden_dim=hidden_dim, embedding_dim=embedding_dim, decoder_embed_dim=decoder_embed_dim)
+    # return Ensemble(mae, embedding_dim, gender_size)
 
 def sample_normalize(image, **kwargs):
     """标准化"""
@@ -262,7 +263,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
 
     MSE_fn =  nn.MSELoss(reduction="sum")
     # loss_fn = nn.L1Loss(reduction='sum')
-    loss_fn = nn.BCELoss(reduction="sum")
+    # loss_fn = nn.BCELoss(reduction="sum")
     lr = lr
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
@@ -301,9 +302,9 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
 
             _, pred_pic, mask, _ = net(image, gender, 0.75)
             target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
-            mean = target.mean(dim=-1, keepdim=True)
-            var = target.var(dim=-1, keepdim=True)
-            target = (target - mean) / (var + 1.e-6)**.5
+            # mean = target.mean(dim=-1, keepdim=True)
+            # var = target.var(dim=-1, keepdim=True)
+            # target = (target - mean) / (var + 1.e-6)**.5
             loss = MSE_fn(pred_pic, target)
             loss.backward()
             # backward,update parameter，更新参数
@@ -337,79 +338,79 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, MAE_epochs, lr, wd, 
             for row in MAE_record:
                 writer1.writerow(row)
     
-    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
-    # 每过10轮，学习率降低一半
-    scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
     
     # regression train
     """======================================================================"""
-    for epoch in range(num_epochs):
-        net.train()
-        net.fine_tune(True)
-        print(epoch)
-        this_record = []
-        global training_loss
-        training_loss = torch.tensor([0], dtype=torch.float32)
-        global total_size
-        total_size = torch.tensor([0], dtype=torch.float32)
+    # optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    # # 每过10轮，学习率降低一半
+    # scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
+#     for epoch in range(num_epochs):
+#         net.train()
+#         net.fine_tune(True)
+#         print(epoch)
+#         this_record = []
+#         global training_loss
+#         training_loss = torch.tensor([0], dtype=torch.float32)
+#         global total_size
+#         total_size = torch.tensor([0], dtype=torch.float32)
 
-        # xm.rendezvous("initialization")
+#         # xm.rendezvous("initialization")
 
-        start_time = time.time()
-        # 在不同的设备上运行该模型
+#         start_time = time.time()
+#         # 在不同的设备上运行该模型
 
-        #   enumerate()，为括号中序列构建索引
-        for batch_idx, data in enumerate(train_loader):
-            # #put data to GPU
-            image, gender = data[0]
-            image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
+#         #   enumerate()，为括号中序列构建索引
+#         for batch_idx, data in enumerate(train_loader):
+#             # #put data to GPU
+#             image, gender = data[0]
+#             image, gender = torch.squeeze(image.type(torch.FloatTensor).to(devices)), gender.type(torch.FloatTensor).to(devices)
 
-            batch_size = len(data[1])
-            label = data[1].to(devices)
+#             batch_size = len(data[1])
+#             label = data[1].to(devices)
 
-            # zero the parameter gradients，是参数梯度归0
-            optimizer.zero_grad()
-            _, _, _, y_pred = net(image, gender, 0.75)
-            # y_pred = y_pred.squeeze()
+#             # zero the parameter gradients，是参数梯度归0
+#             optimizer.zero_grad()
+#             _, _, _, y_pred = net(image, gender, 0.75)
+#             # y_pred = y_pred.squeeze()
 
-            # print(y_pred, label)，求损失
-            loss = loss_fn(y_pred, label)
-            # loss = criterion(y_pred, label.long()).sum()
-            # backward,calculate gradients，反馈计算梯度
-            # 弃用罚函数
-#             total_loss = loss + L1_penalty(net, 1e-5)
-#             total_loss.backward() 
-            loss.backward()
-            # backward,update parameter，更新参数
-            # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
-            # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
-            optimizer.step()
-            # print("=============更新之后===========")
-            # for name, parms in net.named_parameters():	
-            #     print('-->name:', name)
-            #     print('-->grad_requirs:',parms.requires_grad)
-            #     print('-->grad_value:',parms.grad)
-            #     print("======================================")
-            batch_loss = loss.item()
+#             # print(y_pred, label)，求损失
+#             loss = loss_fn(y_pred, label)
+#             # loss = criterion(y_pred, label.long()).sum()
+#             # backward,calculate gradients，反馈计算梯度
+#             # 弃用罚函数
+# #             total_loss = loss + L1_penalty(net, 1e-5)
+# #             total_loss.backward() 
+#             loss.backward()
+#             # backward,update parameter，更新参数
+#             # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
+#             # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
+#             optimizer.step()
+#             # print("=============更新之后===========")
+#             # for name, parms in net.named_parameters():	
+#             #     print('-->name:', name)
+#             #     print('-->grad_requirs:',parms.requires_grad)
+#             #     print('-->grad_value:',parms.grad)
+#             #     print("======================================")
+#             batch_loss = loss.item()
 
-            training_loss += batch_loss
-            total_size += batch_size
-            # print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
+#             training_loss += batch_loss
+#             total_size += batch_size
+#             # print('epoch', epoch+1, '; ', batch_idx+1,' batch loss:', batch_loss / batch_size)
 
-        ## Evaluation
-        # Sets net to eval and no grad context
-        val_total_size, mae_loss = valid_fn(net=net, val_loader=val_loader, devices=devices)
-        # accuracy_num = accuracy(pred_list[1:, :], grand_age[1:])
+#         ## Evaluation
+#         # Sets net to eval and no grad context
+#         val_total_size, mae_loss = valid_fn(net=net, val_loader=val_loader, devices=devices)
+#         # accuracy_num = accuracy(pred_list[1:, :], grand_age[1:])
         
-        train_loss, val_mae = training_loss / total_size, mae_loss / val_total_size
-        this_record.append([epoch, round(train_loss.item(), 2), round(val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
-        print(
-            f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
-        scheduler.step()
-        with open(record_path, 'a+', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for row in this_record:
-                writer.writerow(row)
+#         train_loss, val_mae = training_loss / total_size, mae_loss / val_total_size
+#         this_record.append([epoch, round(train_loss.item(), 2), round(val_mae.item(), 2), optimizer.param_groups[0]["lr"]])
+#         print(
+#             f'training loss is {round(train_loss.item(), 2)}, val loss is {round(val_mae.item(), 2)}, time : {round((time.time() - start_time), 2)}, lr:{optimizer.param_groups[0]["lr"]}')
+#         scheduler.step()
+#         with open(record_path, 'a+', newline='') as csvfile:
+#             writer = csv.writer(csvfile)
+#             for row in this_record:
+#                 writer.writerow(row)
     """======================================================================"""
     torch.save(net, model_path)
 
@@ -463,11 +464,11 @@ def MAE_valid_fn(*, net, val_loader, devices):
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
             _, pred_pic, mask, _ = net(image, gender, 0.75)
             target = rearrange(image, 'b (h p1) (w p2) -> b (h w) (p1 p2)', p1 = 32, p2 = 32)
-            mean = target.mean(dim=-1, keepdim=True)
-            var = target.var(dim=-1, keepdim=True)
-            target = (target - mean) / (var + 1.e-6)**.5
+            # mean = target.mean(dim=-1, keepdim=True)
+            # var = target.var(dim=-1, keepdim=True)
+            # target = (target - mean) / (var + 1.e-6)**.5
             loss = MSE_fn(pred_pic, target)
-            loss = ((loss * mask).sum() / mask.sum())
+            # loss = ((loss * mask).sum() / mask.sum())
     
             batch_loss = loss.item()
             MAE_mae_loss += batch_loss
